@@ -1,0 +1,25 @@
+trigger:
+- master
+
+pr:
+- master
+
+jobs:
+- job: HlslTools_Build_Test
+  strategy:
+    maxParallel: 2
+    matrix:
+      VS2017:
+        imageName: 'vs2017-win2016'
+        _name: VS2017
+      VS2019:
+        imageName: 'windows-2019'
+        _name: VS2019
+  pool:
+    vmImage: $(imageName)
+  steps:
+  - task: PowerShell@2
+    displayName: Build
+    inputs:
+      filePath: scripts\build.ps1
+      arguments: -ci -build
