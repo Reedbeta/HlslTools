@@ -4,22 +4,73 @@ trigger:
 pr:
 - master
 
+variables:
+  solution: 'src/ShaderTools.sln'
+  buildConfiguration: 'Release'
+
 jobs:
-- job: HlslTools_Build_Test
+
+- job: VS_Extension
+  
   strategy:
-    maxParallel: 2
     matrix:
       VS2017:
         imageName: 'vs2017-win2016'
-        _name: VS2017
+        vsVersion: VS2017
       VS2019:
         imageName: 'windows-2019'
-        _name: VS2019
+        vsVersion: VS2019
+  
   pool:
     vmImage: $(imageName)
+  
   steps:
-  - task: PowerShell@2
-    displayName: Build
+  
+  - task: NuGetToolInstaller@0
+    displayName: 'Install NuGet'
     inputs:
-      filePath: scripts\build.ps1
-      arguments: -ci -build
+      versionSpec: '5.1.0'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'Restore NuGet Packages (dotnet)'
+    inputs:
+      command: restore
+      projects: '$(solution)'
+
+  - task: NuGetCommand@2
+    displayName: 'Restore NuGet Packages (nuget)'
+    inputs:
+      restoreSolution: '$(solution)'
+  
+  - task: VSBuild@1
+    displayName: 'Build'
+    inputs:
+      solution: '$(solution)'
+      configuration: $(buildConfiguration)
+
+  - task: DotNetCoreCLI@2
+    displayName: Test
+    inputs:
+      command: test
+      projects: '**/*Tests/*.csproj'
+      arguments: '--configuration $(buildConfiguration)'
+      
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Artifact
+    condition: and(succeeded(), eq(variables['vsVersion'], 'VS2019'))
+    inputs:
+      artifactName: VSIX
+      path: 'src/ShaderTools.Editor.VisualStudio/bin/$(buildConfiguration)/ShaderTools.Editor.VisualStudio.vsix'
+
+- job: VSCode_Extension
+
+  pool:
+    vmImage: 'windows-2019'
+
+  steps:
+
+  - script: dotnet tool install --global dotnet-warp
+    displayName: 'Install dotnet-warp'
+
+  - script: dotnet-warp src/ShaderTools.LanguageServer --verbose --rid win-x64 --output build/ShaderTools.LanguageServer.exe
+    displayName: 'Build Language Server'
