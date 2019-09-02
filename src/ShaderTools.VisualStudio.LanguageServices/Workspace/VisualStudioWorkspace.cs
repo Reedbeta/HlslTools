@@ -164,6 +164,11 @@ namespace ShaderTools.VisualStudio.LanguageServices
                 new SourceFile(textContainer.CurrentText, textDocument?.FilePath));
 
             OnDocumentOpened(document);
+
+            // @reedbeta TODO: create a DocumentEditorOptions for this guy here?
+            // Should the IDocumentOptionsProvider implementation be in here?
+            // (Should DocumentEditorOptions be moved into this assembly as well?)
+            // What if there are multiple views of the same document?
         }
 
         internal void OnSubjectBufferDisconnected(ITextView textView, ITextBuffer textBuffer)
