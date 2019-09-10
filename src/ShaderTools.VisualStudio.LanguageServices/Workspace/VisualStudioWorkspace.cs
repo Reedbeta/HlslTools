@@ -165,10 +165,13 @@ namespace ShaderTools.VisualStudio.LanguageServices
 
             OnDocumentOpened(document);
 
-            // @reedbeta TODO: create a DocumentEditorOptions for this guy here?
-            // Should the IDocumentOptionsProvider implementation be in here?
-            // (Should DocumentEditorOptions be moved into this assembly as well?)
-            // What if there are multiple views of the same document?
+            // @reedbeta TODO: set up a DocumentEditorconfigOptions for this guy.
+            // I'm still not clear on what's the best way to hook up to the OptionServiceFactory, though.
+            // Proposal:
+            // - there's a global object that implements IDocumentOptionsProvider
+            // - which is registered with the global OptionServiceFactory on startup somehow
+            // - it implements lookup of a DocumentEditorconfigOptions object in a map, keyed off the Document
+            // - which map is populated/unpopulated here in OnSubjectBufferConnected/Disconnected
         }
 
         internal void OnSubjectBufferDisconnected(ITextView textView, ITextBuffer textBuffer)
@@ -244,6 +247,16 @@ namespace ShaderTools.VisualStudio.LanguageServices
                 .Select(x => x.AsTextContainer()?.GetOpenDocumentInCurrentContext()?.Id)
                 .Where(x => x != null)
                 .ToImmutableArray();
+        }
+
+        internal ImmutableArray<ITextView> GetTextViewsForBuffer(ITextBuffer textBuffer)
+        {
+            if (!_textBufferToViewsMap.TryGetValue(textBuffer, out var textViews))
+            {
+                return ImmutableArray<ITextView>.Empty;
+            }
+
+            return textViews.ToImmutableArray();
         }
     }
 }
