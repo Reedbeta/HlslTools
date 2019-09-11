@@ -18,6 +18,7 @@ using ShaderTools.CodeAnalysis.Editor.Implementation;
 using ShaderTools.CodeAnalysis.Editor.Shared.Utilities;
 using ShaderTools.CodeAnalysis.Host;
 using ShaderTools.CodeAnalysis.Host.Mef;
+using ShaderTools.CodeAnalysis.Options;
 using ShaderTools.CodeAnalysis.Text;
 
 namespace ShaderTools.VisualStudio.LanguageServices
@@ -29,6 +30,7 @@ namespace ShaderTools.VisualStudio.LanguageServices
         private readonly ITextDocumentFactoryService _textDocumentFactoryService;
         private readonly BackgroundParser _backgroundParser;
         private readonly ConditionalWeakTable<ITextBuffer, ITextDocument> _textBufferToTextDocumentMap;
+        private readonly ConditionalWeakTable<DocumentId, ITextBuffer> _documentIdToTextBufferMap;
         private readonly ConditionalWeakTable<ITextBuffer, DocumentId> _textBufferToDocumentIdMap;
         private readonly ConditionalWeakTable<ITextBuffer, List<ITextView>> _textBufferToViewsMap;
         private readonly ConditionalWeakTable<ITextView, List<ITextBuffer>> _textViewToBuffersMap;
@@ -55,11 +57,17 @@ namespace ShaderTools.VisualStudio.LanguageServices
             _backgroundParser.Start();
 
             _textBufferToTextDocumentMap = new ConditionalWeakTable<ITextBuffer, ITextDocument>();
+            _documentIdToTextBufferMap = new ConditionalWeakTable<DocumentId, ITextBuffer>();
             _textBufferToDocumentIdMap = new ConditionalWeakTable<ITextBuffer, DocumentId>();
             _textBufferToViewsMap = new ConditionalWeakTable<ITextBuffer, List<ITextView>>();
             _textViewToBuffersMap = new ConditionalWeakTable<ITextView, List<ITextBuffer>>();
 
             Services.GetService<IDocumentTrackingService>();
+
+            if (Services.GetService<IOptionService>() is OptionServiceFactory.OptionService optionService)
+            {
+                optionService.RegisterDocumentOptionsProvider(new Implementation.Options.DocumentEditorconfigOptions());
+            }
         }
 
         public override bool CanOpenDocuments => true;
@@ -154,6 +162,7 @@ namespace ShaderTools.VisualStudio.LanguageServices
             var debugName = textDocument?.FilePath ?? "EmbeddedBuffer"; // TODO: Use more useful name based on projection buffer hierarchy.
             var documentId = DocumentId.CreateNewId(debugName);
 
+            _documentIdToTextBufferMap.Add(documentId, textBuffer);
             _textBufferToDocumentIdMap.Add(textBuffer, documentId);
 
             var textContainer = textBuffer.AsTextContainer();
@@ -164,14 +173,6 @@ namespace ShaderTools.VisualStudio.LanguageServices
                 new SourceFile(textContainer.CurrentText, textDocument?.FilePath));
 
             OnDocumentOpened(document);
-
-            // @reedbeta TODO: set up a DocumentEditorconfigOptions for this guy.
-            // I'm still not clear on what's the best way to hook up to the OptionServiceFactory, though.
-            // Proposal:
-            // - there's a global object that implements IDocumentOptionsProvider
-            // - which is registered with the global OptionServiceFactory on startup somehow
-            // - it implements lookup of a DocumentEditorconfigOptions object in a map, keyed off the Document
-            // - which map is populated/unpopulated here in OnSubjectBufferConnected/Disconnected
         }
 
         internal void OnSubjectBufferDisconnected(ITextView textView, ITextBuffer textBuffer)
@@ -203,6 +204,7 @@ namespace ShaderTools.VisualStudio.LanguageServices
 
             OnDocumentClosed(document.Id);
 
+            _documentIdToTextBufferMap.Remove(document.Id);
             _textBufferToDocumentIdMap.Remove(textBuffer);
             _textBufferToTextDocumentMap.Remove(textBuffer);
             _textBufferToViewsMap.Remove(textBuffer);
@@ -249,14 +251,14 @@ namespace ShaderTools.VisualStudio.LanguageServices
                 .ToImmutableArray();
         }
 
-        internal ImmutableArray<ITextView> GetTextViewsForBuffer(ITextBuffer textBuffer)
+        internal ITextBuffer GetTextBufferForDocument(DocumentId documentId)
         {
-            if (!_textBufferToViewsMap.TryGetValue(textBuffer, out var textViews))
+            if (!_documentIdToTextBufferMap.TryGetValue(documentId, out var textBuffer))
             {
-                return ImmutableArray<ITextView>.Empty;
+                return null;
             }
 
-            return textViews.ToImmutableArray();
+            return textBuffer;
         }
     }
 }
