@@ -66,7 +66,7 @@ namespace ShaderTools.VisualStudio.LanguageServices
 
             if (Services.GetService<IOptionService>() is OptionServiceFactory.OptionService optionService)
             {
-                optionService.RegisterDocumentOptionsProvider(new Implementation.Options.DocumentEditorconfigOptions());
+                optionService.RegisterDocumentOptionsProvider(new Implementation.Options.EditorconfigDocumentOptionsProvider());
             }
         }
 

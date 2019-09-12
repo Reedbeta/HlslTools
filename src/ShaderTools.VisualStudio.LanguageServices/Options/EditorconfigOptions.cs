@@ -11,7 +11,7 @@ namespace ShaderTools.VisualStudio.LanguageServices.Implementation.Options
 {
     // Hooks up .editorconfig settings, looked up from the workspace's ITextBuffer for the document.
 
-    internal sealed class DocumentEditorconfigOptions : IDocumentOptions, IDocumentOptionsProvider
+    internal sealed class EditorconfigDocumentOptions : IDocumentOptions
     {
         public bool TryGetDocumentOption(Document document, OptionKey option, OptionSet underlyingOptions, out object value)
         {
@@ -53,10 +53,15 @@ namespace ShaderTools.VisualStudio.LanguageServices.Implementation.Options
                 return false;
             }
         }
+    }
+
+    internal sealed class EditorconfigDocumentOptionsProvider : IDocumentOptionsProvider
+    {
+        private static readonly EditorconfigDocumentOptions _documentOptions = new EditorconfigDocumentOptions();
 
         public Task<IDocumentOptions> GetOptionsForDocumentAsync(Document document, CancellationToken cancellationToken)
         {
-            return Task.FromResult<IDocumentOptions>(this);
+            return Task.FromResult<IDocumentOptions>(_documentOptions);
         }
     }
 }
