@@ -15,8 +15,8 @@ namespace ShaderTools.VisualStudio.LanguageServices.Implementation.Options
     {
         public bool TryGetDocumentOption(Document document, OptionKey option, OptionSet underlyingOptions, out object value)
         {
-            // @reedbeta TODO: Can/should we look up the workspace from the Document somehow, rather than using PrimaryWorkspace?
-
+            // From the document, look up the ITextBuffer, and find its IEditorOptions.
+            // Note that IEditorOptions are also available from an ITextView. Not sure if those options can differ from the ones on the buffer.
             var workspace = PrimaryWorkspace.Workspace as VisualStudioWorkspace;
             var textBuffer = workspace?.GetTextBufferForDocument(document.Id);
             IEditorOptions editorOptions = textBuffer?.Properties[typeof(IEditorOptions)] as IEditorOptions;

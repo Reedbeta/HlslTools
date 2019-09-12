@@ -20,6 +20,4 @@ namespace ShaderTools.CodeAnalysis.Options
         /// </summary>
         Task<IDocumentOptions> GetOptionsForDocumentAsync(Document document, CancellationToken cancellationToken);
     }
-
-    // @reedbeta TODO: make an implementation of this guy that hooks up to an ITextView's IEditorOptions so we can get .editorconfig settings.
 }
