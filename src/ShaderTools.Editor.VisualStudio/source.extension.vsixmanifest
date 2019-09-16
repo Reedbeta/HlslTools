@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="7def6c01-a05e-42e6-953d-3fdea1891737" Version="1.1" Language="en-US" Publisher="Tim Jones" />
-        <DisplayName>HLSL Tools for Visual Studio</DisplayName>
-        <Description xml:space="preserve">Enhanced support for editing HLSL in Visual Studio</Description>
-        <MoreInfo>https://github.com/tgjones/HlslTools</MoreInfo>
+        <Identity Id="390534B3-6AE6-4104-990E-E2BCCE975075" Version="1.1" Language="en-US" Publisher="Tim Jones" />
+        <DisplayName>HLSL Tools for Visual Studio (NRR)</DisplayName>
+        <Description xml:space="preserve">Enhanced support for editing HLSL in Visual Studio (Nathan Reed's fork)</Description>
+        <MoreInfo>https://github.com/Reedbeta/HlslTools</MoreInfo>
         <License>Resources\LICENSE</License>
-        <ReleaseNotes>https://github.com/tgjones/HlslTools/blob/master/CHANGELOG.md</ReleaseNotes>
+        <ReleaseNotes>https://github.com/Reedbeta/HlslTools/blob/master/CHANGELOG.md</ReleaseNotes>
         <Icon>Resources\icon.png</Icon>
         <PreviewImage>Resources\preview.png</PreviewImage>
         <Tags>HLSL, shader, Direct3D</Tags>
