@@ -304,6 +304,31 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Tests.Parser
         }
 
         [Fact]
+        public void TestGlobalDeclarationWithUnormFloatType()
+        {
+            var typeText = "Texture2D<unorm float4>";
+            var text = typeText + " c;";
+            var file = ParseFile(text);
+
+            Assert.NotNull(file);
+            Assert.Equal(1, file.Declarations.Count);
+            Assert.Equal(text, file.ToString());
+            Assert.Equal(0, file.GetDiagnostics().Count());
+
+            Assert.Equal(SyntaxKind.VariableDeclarationStatement, file.Declarations[0].Kind);
+            var fs = (VariableDeclarationStatementSyntax)file.Declarations[0];
+            Assert.NotNull(fs.Declaration.Type);
+            Assert.Equal(typeText, fs.Declaration.Type.ToString());
+            Assert.Equal(SyntaxKind.PredefinedObjectType, fs.Declaration.Type.Kind);
+            Assert.Equal(1, fs.Declaration.Variables.Count);
+            Assert.NotNull(fs.Declaration.Variables[0].Identifier);
+            Assert.Equal("c", fs.Declaration.Variables[0].Identifier.ToString());
+            Assert.Null(fs.Declaration.Variables[0].Initializer);
+            Assert.NotNull(fs.SemicolonToken);
+            Assert.False(fs.SemicolonToken.IsMissing);
+        }
+
+        [Fact]
         public void TestGlobalDeclarationWithUnnamedStructType()
         {
             var typeText = "struct { int a; }";
@@ -326,6 +351,32 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Tests.Parser
             Assert.Null(fs.Declaration.Variables[0].Initializer);
             Assert.NotNull(fs.SemicolonToken);
             Assert.False(fs.SemicolonToken.IsMissing);
+        }
+
+        [Fact]
+        public void TestGlobalDeclarationWithTypedefStructType()
+        {
+            var typeText = "struct { int a; }";
+            var typedefText = "typedef " + typeText;
+            var text = typedefText + " c;";
+            var file = ParseFile(text);
+
+            Assert.NotNull(file);
+            Assert.Equal(1, file.Declarations.Count);
+            Assert.Equal(text, file.ToString());
+            Assert.Equal(0, file.GetDiagnostics().Count());
+
+            Assert.Equal(SyntaxKind.TypedefStatement, file.Declarations[0].Kind);
+            var ts = (TypedefStatementSyntax)file.Declarations[0];
+            Assert.NotNull(ts.Type);
+            Assert.Equal(typeText, ts.Type.ToString());
+            Assert.Equal(SyntaxKind.StructType, ts.Type.Kind);
+            Assert.Equal(1, ts.Declarators.Count);
+            var ds = ts.Declarators[0];
+            Assert.NotNull(ds.Identifier);
+            Assert.Equal("c", ds.Identifier.ToString());
+            Assert.NotNull(ts.SemicolonToken);
+            Assert.False(ts.SemicolonToken.IsMissing);
         }
 
         [Fact]
@@ -487,6 +538,90 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Tests.Parser
             Assert.Equal(0, fs.Passes[0].Statements.Count);
 
             Assert.NotNull(fs.SemicolonToken);
+        }
+
+        [Fact]
+        public void TestAttributeSpecifierOnFunctionReturn()
+        {
+            var text = "[[vk::location(0)]] float4 main() { return float4(1, 1, 1, 1); }";
+            var file = ParseFile(text);
+
+            Assert.NotNull(file);
+            Assert.Empty(file.GetDiagnostics());
+            Assert.Equal(text, file.ToString());
+            Assert.Equal(1, file.Declarations.Count);
+
+            Assert.Equal(SyntaxKind.FunctionDefinition, file.Declarations[0].Kind);
+            var fd = (FunctionDefinitionSyntax)file.Declarations[0];
+            Assert.Equal(1, fd.Attributes.Count);
+        }
+
+        [Fact]
+        public void TestAttributeSpecifierOnFunctionParameter()
+        {
+            var text = "float4 main([[vk::location(0)]] float4 input) { return float4(1, 1, 1, 1); }";
+            var file = ParseFile(text);
+
+            Assert.NotNull(file);
+            Assert.Empty(file.GetDiagnostics());
+            Assert.Equal(text, file.ToString());
+            Assert.Equal(1, file.Declarations.Count);
+
+            Assert.Equal(SyntaxKind.FunctionDefinition, file.Declarations[0].Kind);
+            var fd = (FunctionDefinitionSyntax)file.Declarations[0];
+            Assert.Equal(1, fd.ParameterList.Parameters[0].Attributes.Count);
+        }
+
+        [Fact]
+        public void TestAttributeSpecifierOnStructuredBuffer()
+        {
+            var text = "[[vk::binding(0, 1), vk::counter_binding(2)]] RWStructuredBuffer<float4> mySBuffer;";
+            var file = ParseFile(text);
+
+            Assert.NotNull(file);
+            Assert.Empty(file.GetDiagnostics());
+            Assert.Equal(text, file.ToString());
+            Assert.Equal(1, file.Declarations.Count);
+
+            Assert.Equal(SyntaxKind.VariableDeclarationStatement, file.Declarations[0].Kind);
+            var fd = (VariableDeclarationStatementSyntax)file.Declarations[0];
+            Assert.Equal(1, fd.Attributes.Count);
+        }
+
+        [Fact]
+        public void TestAttributeSpecifierOnStructField()
+        {
+            var text = "struct S { [[vk::binding(0)]] float4 Position; }; ";
+            var file = ParseFile(text);
+
+            Assert.NotNull(file);
+            Assert.Empty(file.GetDiagnostics());
+            Assert.Equal(text, file.ToString());
+            Assert.Equal(1, file.Declarations.Count);
+
+            Assert.Equal(SyntaxKind.TypeDeclarationStatement, file.Declarations[0].Kind);
+            var fd = (TypeDeclarationStatementSyntax)file.Declarations[0];
+            Assert.Equal(SyntaxKind.StructType, fd.Type.Kind);
+            var st = (StructTypeSyntax)fd.Type;
+            Assert.Equal(SyntaxKind.VariableDeclarationStatement, st.Members[0].Kind);
+            var vd = (VariableDeclarationStatementSyntax)st.Members[0];
+            Assert.Equal(1, vd.Attributes.Count);
+        }
+
+        [Fact]
+        public void TestAttributeSpecifierOnGlobalVariable()
+        {
+            var text = "struct S { }; [[vk::push_constant]] S PushConstants; ";
+            var file = ParseFile(text);
+
+            Assert.NotNull(file);
+            Assert.Empty(file.GetDiagnostics());
+            Assert.Equal(text, file.ToString());
+            Assert.Equal(2, file.Declarations.Count);
+
+            Assert.Equal(SyntaxKind.VariableDeclarationStatement, file.Declarations[1].Kind);
+            var fd = (VariableDeclarationStatementSyntax)file.Declarations[1];
+            Assert.Equal(1, fd.Attributes.Count);
         }
 
         private static CompilationUnitSyntax ParseFile(string text)

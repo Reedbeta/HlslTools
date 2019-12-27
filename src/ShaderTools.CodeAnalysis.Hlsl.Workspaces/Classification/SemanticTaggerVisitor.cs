@@ -31,7 +31,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Classification
         {
             var symbol = _semanticModel.GetSymbol(node);
             if (symbol != null)
-                CreateTag(node.Name.Name, HlslClassificationTypeNames.FunctionIdentifier);
+                CreateTag(node.Name.GetUnqualifiedName().Name, HlslClassificationTypeNames.FunctionIdentifier);
 
             base.VisitAttribute(node);
         }
@@ -199,11 +199,6 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Classification
                 CreateTag(node.MacroReference.NameToken, HlslClassificationTypeNames.MacroIdentifier);
 
             base.VisitSyntaxToken(node);
-        }
-
-        public override void VisitSyntaxTrivia(SyntaxTrivia node)
-        {
-            base.VisitSyntaxTrivia(node);
         }
 
         private static string GetClassificationType(Symbol symbol)

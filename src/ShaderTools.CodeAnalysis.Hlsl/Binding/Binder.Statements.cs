@@ -141,7 +141,7 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Binding
             return new BoundForStatement(
                 syntax.Declaration != null ? Bind(syntax.Declaration, x => BindForStatementDeclaration(x, parent)) : null,
                 syntax.Initializer != null ? forStatementBinder.Bind(syntax.Initializer, forStatementBinder.BindExpression) : null,
-                forStatementBinder.Bind(syntax.Condition, forStatementBinder.BindExpression),
+                syntax.Condition != null ? forStatementBinder.Bind(syntax.Condition, forStatementBinder.BindExpression) : null,
                 syntax.Incrementor != null ? forStatementBinder.Bind(syntax.Incrementor, forStatementBinder.BindExpression) : null,
                 forStatementBinder.Bind(syntax.Statement, x => forStatementBinder.BindStatement(x, parent)));
         }
@@ -199,15 +199,17 @@ namespace ShaderTools.CodeAnalysis.Hlsl.Binding
             return BindVariableDeclaration(syntax.Declaration, parent);
         }
 
-        private ImmutableArray<BoundAttribute> BindAttributes(List<AttributeSyntax> attributes)
+        private ImmutableArray<BoundAttribute> BindAttributes(List<AttributeDeclarationSyntaxBase> attributes)
         {
-            return attributes.Select(x => Bind(x, BindAttribute)).ToImmutableArray();
+            return attributes.SelectMany(x => x.GetAttributes().Select(y => Bind(y, BindAttribute))).ToImmutableArray();
         }
 
         private BoundAttribute BindAttribute(AttributeSyntax syntax)
         {
-            var attributeSymbol = IntrinsicAttributes.AllAttributes.FirstOrDefault(x => x.Name == syntax.Name.Name.Text)
-                ?? new AttributeSymbol(syntax.Name.Name.Text, string.Empty);
+            var nameText = syntax.Name.GetUnqualifiedName().Name.Text;
+
+            var attributeSymbol = IntrinsicAttributes.AllAttributes.FirstOrDefault(x => x.Name == nameText)
+                ?? new AttributeSymbol(nameText, string.Empty);
             return new BoundAttribute(attributeSymbol);
         }
     }

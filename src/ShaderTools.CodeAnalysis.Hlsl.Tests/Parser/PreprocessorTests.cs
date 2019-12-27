@@ -143,6 +143,17 @@ float b;
         }
 
         [Fact]
+        public void TestDefineWithKeywords()
+        {
+            const string text = "#define SAMPLE_TEXTURE(sampler, uv) (tex2D(sampler, uv))";
+            var node = Parse(text);
+
+            TestRoundTripping(node, text);
+            VerifyDirectivesSpecial(node,
+                new DirectiveInfo { Kind = SyntaxKind.FunctionLikeDefineDirectiveTrivia, Status = NodeStatus.IsActive });
+        }
+
+        [Fact]
         public void TestMacroExpansionOrder()
         {
             const string text = @"
@@ -733,6 +744,24 @@ int a;
             const string text = @"
 #define FOO
 #if defined(FOO)
+int a;
+#endif";
+            var node = Parse(text);
+
+            TestRoundTripping(node, text);
+            VerifyDirectivesSpecial(node,
+                new DirectiveInfo { Kind = SyntaxKind.ObjectLikeDefineDirectiveTrivia, Status = NodeStatus.IsActive, Text = "FOO" },
+                new DirectiveInfo { Kind = SyntaxKind.IfDirectiveTrivia, Status = NodeStatus.IsActive | NodeStatus.BranchTaken | NodeStatus.TrueValue },
+                new DirectiveInfo { Kind = SyntaxKind.EndIfDirectiveTrivia, Status = NodeStatus.IsActive });
+            VerifyDeclarations(node, new DeclarationInfo { Kind = SyntaxKind.VariableDeclarationStatement, Text = "a" });
+        }
+
+        [Fact]
+        public void TestIfWithDefinedWithoutParenthesesOnDefined()
+        {
+            const string text = @"
+#define FOO
+#if defined FOO
 int a;
 #endif";
             var node = Parse(text);
