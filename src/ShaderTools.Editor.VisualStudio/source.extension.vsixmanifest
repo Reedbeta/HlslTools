@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="390534B3-6AE6-4104-990E-E2BCCE975075" Version="1.1.300" Language="en-US" Publisher="Tim Jones" />
+        <Identity Id="390534B3-6AE6-4104-990E-E2BCCE975075" Version="1.1.301" Language="en-US" Publisher="Tim Jones" />
         <DisplayName>HLSL Tools for Visual Studio (NRR)</DisplayName>
         <Description xml:space="preserve">Enhanced support for editing HLSL in Visual Studio (Nathan Reed's fork)</Description>
         <MoreInfo>https://github.com/Reedbeta/HlslTools</MoreInfo>
